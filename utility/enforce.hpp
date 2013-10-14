@@ -18,7 +18,7 @@
 	::jag::make_enforce(exp, \
 	validation, \
 	[] {return std::runtime_error("Failed enforcement"); }, \
-	[](boost::exception& e) {e << ::jag::enforce_diag_tag(":Expression '" BOOST_PP_STRINGIZE(exp) "' failed!"); }, \
+	[&](boost::exception& e) {e << ::jag::enforce_diag_tag(":Expression '" BOOST_PP_STRINGIZE(exp) "' failed!"); }, \
 	__FILE__, __LINE__, BOOST_CURRENT_FUNCTION)
 
 
@@ -26,7 +26,7 @@
 	::jag::make_enforce(exp, \
 	validation, \
 	[] {return std::runtime_error("Failed enforcement"); }, \
-	[](boost::exception& e) {\
+	[&](boost::exception& e) {\
 		e << ::jag::enforce_diag_tag(":Expression '" BOOST_PP_STRINGIZE(exp) "' failed!") << (::jag::enforce_info_tag() << msg); }, \
 	__FILE__, __LINE__, BOOST_CURRENT_FUNCTION)
 
@@ -50,13 +50,13 @@ namespace jag
 
 	struct enforce_policy_succeed
 	{
-		template<typename T>bool operator()(T&& u) { return !!u; }
+		template<typename T>bool operator()(T&& u) const { return !!u; }
 	};
 
 	struct enforce_policy_throw
 	{
-		std::runtime_error operator()() { return std::runtime_error("Failed enforcement"); }
-		void operator()(boost::exception& u) {}
+		std::runtime_error operator()() const{ return std::runtime_error("Failed enforcement"); }
+		void operator()(boost::exception& u) const {}
 	};
 
 	
@@ -71,7 +71,7 @@ namespace jag
 	{
 		if (!validator(std::forward<T>(exp)))
 		{
-			auto e = boost::enable_error_info(raiser());
+			auto&& e = boost::enable_error_info(raiser());
 			if (file != nullptr)
 				e << boost::throw_file(file);
 			if (line != -1)
